@@ -5,19 +5,30 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__TEST_CONNECTION: "Enabled"
     AIRFLOW_CONN_TWEET_DB: postgres://admin:admin@tweet_db:5432/tweet_db
+    AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: 60
+    AIRFLOW__API_AUTH__JWT_SECRET: foo
+    AIRFLOW__API__SECRET_KEY: bar
   volumes:
     - ./data:/opt/airflow/data
 
 services:
-  airflow-webserver:
+  airflow-apiserver:
+    <<: *airflow-common
+  airflow-scheduler:
     <<: *airflow-common
 
-  airflow-scheduler:
+  airflow-worker:
+    <<: *airflow-common
+
+  airflow-triggerer:
     <<: *airflow-common
 
   airflow-init:
     <<: *airflow-common
 
+  airflow-cli:
+    <<: *airflow-common
+    
   tweet_db:
     image: postgres:13-alpine
     environment:
@@ -30,3 +41,14 @@ services:
       test: ["CMD-SHELL", "pg_isready -U admin -d tweet_db"]
       interval: 5s
       retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - tweet_db
