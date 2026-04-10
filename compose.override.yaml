@@ -1,0 +1,32 @@
+x-airflow-common:
+  &airflow-common
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor 
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__TEST_CONNECTION: "Enabled"
+    AIRFLOW_CONN_TWEET_DB: postgres://admin:admin@tweet_db:5432/tweet_db
+  volumes:
+    - ./data:/opt/airflow/data
+
+services:
+  airflow-webserver:
+    <<: *airflow-common
+
+  airflow-scheduler:
+    <<: *airflow-common
+
+  airflow-init:
+    <<: *airflow-common
+
+  tweet_db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=tweet_db
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d tweet_db"]
+      interval: 5s
+      retries: 5

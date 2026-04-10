@@ -1,0 +1,8 @@
+pandas
+pycld2
+nltk
+geopandas
+matplotlib
+plotly
+mapclassify
+seaborn
