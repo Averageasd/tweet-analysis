@@ -72,4 +72,4 @@ Map built with Geopandas that showed post distribution in each state. Here is th
 
 ### Link to visualization in HTML
 
-[Click here to view the interactive twitter posts distribution interactive map](./usa_2020_election_tweet_count.html)
+[View Rendered Map](https://raw.githack.com/Averageasd/tweet-analysis/main/usa_2020_election_tweet_count.html)
