@@ -6,7 +6,7 @@ This project explores 2020 U.S. Presidential Election by analyzing the sentiment
 ## Tech stack
 Python, PyPlot, Mathplotlib, Pandas, NLTK, Airflow, BigQuery, Tableau, Geopandas.
 
-## Approach 
+## Data Exploration
 
 ### Data Cleaning and Transformation
 Since I am only interested in tweets that originated from USA, I dropped all rows that contained tweets from other countries. For the tweets that originated from USA, I only keep tweets that were written in English. In order to perform language detection, I use pycld2. I create a new column called lang that contains language code representing the language the tweets were written in. I then dropped tweets that were not written in English. Sentiment analysis at this point has become an easy task since we don't have to deal with any language but English. To conduct sentiment analysis, I leverage module vader of library NLTK. Before applying sentiment analysis on each tweet, I remove all irrelevant words and symbols from each tweet. As a result, The tweets now only contain alphabetical characters. Furthermore, I lemmatize the words in each tweet (reducing words to root form) using WordNetLemmatizer. This operation reduces a lot of unique texts in each tweet. After having cleansed all the tweets, I feed them into SentimentIntensityAnalyzer. This operation takes over 30 seconds. After exploratory data analysis phase, I end up with 144201 rows. 
@@ -73,3 +73,6 @@ Map built with Geopandas that showed post distribution in each state. Here is th
 ### Link to visualization in HTML
 
 [View Rendered Map](https://raw.githack.com/Averageasd/tweet-analysis/main/usa_2020_election_tweet_count.html)
+
+## Data Pipeline
+![](./tweet-analysis.png)
