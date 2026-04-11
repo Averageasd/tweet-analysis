@@ -104,6 +104,7 @@ def _calculate_sentiment():
     staged_tweets.reset_index(drop=True, inplace=True)
     staged_tweets.to_csv("/opt/airflow/data/cleansed_tweets.csv")
 
+
 with DAG(
     dag_id="analyze_tweet_sentiment",
     start_date=pendulum.today("UTC"),

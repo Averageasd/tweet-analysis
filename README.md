@@ -69,3 +69,7 @@ Map built with Geopandas that showed post distribution in each state. Here is th
 </br>
 
 ![](./sentiment-usa-map-2020-election.png)
+
+### Link to visualization in HTML
+
+[Click here to view the interactive twitter posts distribution interactive map](./usa_2020_election_tweet_count.html)
