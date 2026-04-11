@@ -76,3 +76,5 @@ Map built with Geopandas that showed post distribution in each state. Here is th
 
 ## Data Pipeline
 ![](./tweet-analysis.png)
+
+![](./airflow-ui.png)
