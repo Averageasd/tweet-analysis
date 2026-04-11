@@ -1,5 +1,6 @@
 x-airflow-common:
   &airflow-common
+  build: .
   environment:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor 
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
@@ -41,6 +42,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U admin -d tweet_db"]
       interval: 5s
       retries: 5
+
+  
 
   pgadmin:
     image: dpage/pgadmin4

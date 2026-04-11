@@ -1,21 +1,20 @@
 import pendulum
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
 import pandas as pd 
 import pycld2 as cld2
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import nltk
-import matplotlib.pyplot as plt
-import plotly.express as px
-nltk.download("vader_lexicon")
-import seaborn as sns
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-nltk.download('punkt_tab')      
-nltk.download('wordnet')    
-nltk.download('omw-1.4') 
-nltk.download('averaged_perceptron_tagger_eng') 
+# nltk.download("vader_lexicon")
+# nltk.download('punkt_tab')      
+# nltk.download('wordnet')    
+# nltk.download('omw-1.4') 
+# nltk.download('averaged_perceptron_tagger_eng') 
 sid_obj = SentimentIntensityAnalyzer()
 lemmatizer = WordNetLemmatizer()
 
@@ -73,7 +72,7 @@ def _clean_tweets():
     )
     
     target_file = "/opt/airflow/data/stage_tweets.csv"
-    merged_tweets.to_csv(target_file)
+    merged_tweets.to_csv(target_file, index=False)
 
 def _lemmatize_and_sentiment(sentence):
     sentence = str(sentence)
@@ -102,8 +101,37 @@ def _calculate_sentiment():
     staged_tweets = staged_tweets.loc[(staged_tweets['country'] == 'United States of America') & (staged_tweets['lang'] == 'en')]
     staged_tweets['sentiment'] = staged_tweets['tweet'].apply(_lemmatize_and_sentiment)
     staged_tweets.reset_index(drop=True, inplace=True)
-    staged_tweets.to_csv("/opt/airflow/data/cleansed_tweets.csv")
+    staged_tweets.to_csv("/opt/airflow/data/cleansed_tweets.csv", index=False)
 
+def _upload_file_tweet_bucket():
+    cleansed_tweets = pd.read_csv('/opt/airflow/data/cleansed_tweets.csv')
+    cleansed_tweets.to_parquet('/opt/airflow/data/cleansed_tweets.parquet', engine='pyarrow', index=False)
+    gcs_hook = GCSHook(gcp_conn_id='big_query_tweet_db')
+    gcs_hook.upload(
+        bucket_name="tweet-bucket-ng",
+        object_name="cleansed_tweets.parquet",
+        filename="/opt/airflow/data/cleansed_tweets.parquet"
+    )
+
+
+def _create_bigquery_final_tweets():
+    bq_hook = BigQueryHook(gcp_conn_id='big_query_tweet_db')    
+    sql = """
+    CREATE OR REPLACE EXTERNAL TABLE `dtc-de-course-487301.tweet_analysis_dataset.final_tweet`
+    OPTIONS (
+        format = 'PARQUET',
+        uris = ['gs://tweet-bucket-ng/cleansed_tweets.parquet']
+    );
+    """
+    bq_hook.insert_job(
+    configuration={
+        "query": {
+            "query": sql,
+            "useLegacySql": False,
+        }
+    }
+    ).result()
+    
 
 with DAG(
     dag_id="analyze_tweet_sentiment",
@@ -120,6 +148,16 @@ with DAG(
         python_callable=_calculate_sentiment
     )
     
-    clean_tweet_task >> apply_sentiment_task
+    upload_tweet_to_gcs_bucket = PythonOperator(
+        task_id="upload_tweet_gcs_bucket",
+        python_callable=_upload_file_tweet_bucket
+    )
+    
+    craete_finaL_tweet_big_query_task = PythonOperator(
+        task_id="create_big_query_final_tweet",
+        python_callable=_create_bigquery_final_tweets
+    )
+    
+    clean_tweet_task >> apply_sentiment_task >> upload_tweet_to_gcs_bucket >> craete_finaL_tweet_big_query_task
     
     
