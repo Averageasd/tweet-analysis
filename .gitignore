@@ -1,6 +1,10 @@
 **/**.csv
 
+.env
+
 cb_2020_us_state_500k/
+
+key/
 
 **/logs/
 **/plugins/
